@@ -1,25 +1,26 @@
 package main
 
 import (
-	"github.com/mrizalr/go-tiket/domain"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	"context"
+	"time"
+
+	"github.com/mrizalr/go-tiket/db"
+	"github.com/mrizalr/go-tiket/model"
+	"github.com/mrizalr/go-tiket/user/repository/mysql"
+	"github.com/mrizalr/go-tiket/user/usecase"
 )
 
 func main() {
-	db, err := gorm.Open(mysql.Open("root:@tcp(127.0.0.1:2252)/tiketdb"), &gorm.Config{})
-	if err != nil {
-		panic(err)
-	}
+	db := db.New()
 
-	db.AutoMigrate(
-		&domain.User{},
-		&domain.Credentials{},
-		&domain.Event{},
-		&domain.EventFormat{},
-		&domain.EventTopic{},
-		&domain.Ticket{},
-		&domain.TicketType{},
-		&domain.Booking{},
-	)
+	userRepository := mysql.NewUserRepository(db)
+	userUsecase := usecase.NewUserUsecase(userRepository)
+
+	userUsecase.Create(context.Background(), model.UserRegisterRequest{
+		Username:  "test",
+		Password:  "test",
+		Email:     "test@gmail.com",
+		Gender:    1,
+		Birthdate: time.Date(1998, 5, 22, 0, 0, 0, 0, time.UTC),
+	})
 }
